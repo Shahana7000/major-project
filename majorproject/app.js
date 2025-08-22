@@ -7,6 +7,7 @@ const methodOverride = require('method-override');
 const ejsMate = require('ejs-mate');
 const wrapAsync = require('./utils/wrapAsync.js');
 const ExpressError = require('./utils/ExpressError.js');
+const {listingSchema} = require('./schema.js');
 
 
 
@@ -35,6 +36,18 @@ app.get("/", (req, res) => {
     res.send("Hello World");
 });
 
+const validateListing = (req, res, next) =>{
+    let {error} = listingSchema.validate(req.body);
+
+    if(error){
+        let errMsg = error.details.map((el) => el.message).join(",");
+        throw new ExpressError(400, error)
+    }else{
+        next()
+    }
+    
+}
+
 app.get("/listings", wrapAsync(async (req, res, next) => {
    
         const allListings = await Listing.find({});
@@ -52,24 +65,24 @@ app.get("/listings/:id", async (req, res) => {
     try {
         const { id } = req.params;
         const listing = await Listing.findById(id);  // single listing
-        if (!listing) {
-            return res.status(404).send("Listing not found");
-        }
+        // if (!listing) {
+        //     return res.status(404).send("Listing not found");
+        // }
+        listingSchema.validate(req.body)
         res.render("listings/show", { listing }); // pass single listing
-    } catch (err) {
-        console.error(err);
+    }  catch (err) {
+       console.error(err);
         res.status(500).send("Something went wrong");
     }
 });
 
 app.post("/listings", wrapAsync(async (req, res, next) => {
-    if(!req.body.listing){
-        throw new ExpressError(400, 'send valid data for listing');
+    let result = listingSchema.validate(req.body)
+    console.log(result);
+    if(result.err){
+        throw new ExpressError(400, result.error)
     }
     const newListing = new Listing(req.body.listing);
-    if(!newListing.description){
-         throw new ExpressError(400, 'send valid data for listing');
-    }
     await newListing.save();
     res.redirect("/listings");
     
@@ -80,7 +93,7 @@ app.post("/listings", wrapAsync(async (req, res, next) => {
 
 app.get("/listings/:id/edit", wrapAsync(async (req, res, next) =>{
     
-       let { id } = req.params;
+    let { id } = req.params;
     let listing = await Listing.findById(id);
     res.render("listings/edit", { listing });
     
@@ -91,13 +104,13 @@ app.get("/listings/:id/edit", wrapAsync(async (req, res, next) =>{
 
 app.put("/listings/:id", wrapAsync(async(req,res, next) =>{
    
-       let { id } = req.params;
+    let { id } = req.params;
     await Listing.findByIdAndUpdate(id, {...req.body.listing});
     res.redirect(`/listings/${id}`);
 
 })
 );
-app.delete("/listings/:id",wrapAsync(async(req, res, next) =>{
+app.delete("/listings/:id", wrapAsync(async(req, res, next) =>{
     
    let { id } = req.params;
    let deletedListing =  await Listing.findByIdAndDelete(id);
@@ -119,5 +132,5 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(8080, () => {
-    console.log("Server is running on port 8080");
+    console.log("Server is running on ports 8080");
 });
