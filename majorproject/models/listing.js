@@ -22,6 +22,20 @@ image: {
         default: "https://unsplash.com/photos/SVTBVz8mcOY"
     }
 },
+   image: {
+        filename: String,
+        url: {
+            type: String,
+            default: "https://unsplash.com/photos/SVTBVz8mcOY",
+            validate: {
+                validator: function(v) {
+                    // Accept any valid URL
+                    return /^(https?:\/\/.*\.(?:png|jpg|jpeg|gif|svg|webp|bmp|tiff|ico)|https?:\/\/.*)/i.test(v);
+                },
+                message: props => `${props.value} is not a valid image URL!`
+            }
+        }
+    },
 
     price: {
   type: Number,
@@ -31,6 +45,14 @@ image: {
 
     location : String,
     country : String,
+    reviews : [
+        {
+            type : Schema.Types.ObjectId,
+            ref : "Review"
+
+        },
+
+    ]
 })
 
 
