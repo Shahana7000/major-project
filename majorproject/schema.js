@@ -1,5 +1,4 @@
 const Joi = require('joi');
-const review = require('./models/review');
 
 const listingSchema = Joi.object({
     title: Joi.string().min(3).required(),
@@ -13,12 +12,15 @@ const listingSchema = Joi.object({
     }).optional()
 });
 
-module.exports = listingSchema;
-
-
-module.exports.reviewSchema = Joi.object({
-    review : Joi.object({
-        rating:Joi.number().required().min(1).max(5),
-        comment : Joi.string().required()
+const reviewSchema = Joi.object({
+    review: Joi.object({
+        rating: Joi.number().required().min(1).max(5),
+        comment: Joi.string().required()
     }).required()
-})
+});
+
+// 👇 single export me dono bhej do
+module.exports = {
+    listingSchema,
+    reviewSchema
+};
