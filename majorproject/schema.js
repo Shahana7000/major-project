@@ -8,7 +8,13 @@ const listingSchema = Joi.object({
     country: Joi.string().required(),
     image: Joi.object({
         filename: Joi.string().allow(''),
-        url: Joi.string().uri().allow('')
+        url: Joi.alternatives().try(
+            // Absolute URLs ending with image extension
+            Joi.string().uri().pattern(/\.(jpg|jpeg|png|webp)$/i),
+
+            // Relative paths like /images/default.jpg, /uploads/abc.png
+            Joi.string().pattern(/^\/.*\.(jpg|jpeg|png|webp)$/i)
+        ).allow('')
     }).optional()
 });
 
@@ -16,10 +22,14 @@ const reviewSchema = Joi.object({
     review: Joi.object({
         rating: Joi.number().required().min(1).max(5),
         comment: Joi.string().required()
-    }).required()
+    }).required()  // ✅ closing and required for inner object
 });
 
-// 👇 single export me dono bhej do
+// const reviewSchema = Joi.object({
+//     rating: Joi.number().required().min(1).max(5),
+//     comment: Joi.string().required()
+// });
+
 module.exports = {
     listingSchema,
     reviewSchema

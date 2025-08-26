@@ -15,11 +15,11 @@
            <div class="invalid-feedback">Description should be valid1!</div>
         </div>
        
-        <div class="mb-3">
-        <label for="image" class="form-label">Image Link</label>   
-        <input name="listing[image]" value="<%= listing.image.url %>" type="text" class="form-control">
+       <div class="mb-3">
+      <label for="image" class="form-label">Image Link</label>   
+      <input name="listing[image][url]" value="<%= listing.image.url %>" type="text" class="form-control">
+      </div>
 
-        </div>
         <div class="mb-3">
         <label for="price" class="form-label">Price</label>    
         <input name="listing[price]" value="<%=listing.price %>" type="number" class="form-control" required>

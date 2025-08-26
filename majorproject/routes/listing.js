@@ -39,16 +39,40 @@ router.get("/:id", async (req, res) => {
     }
 });
 
+// router.post("/", wrapAsync(async (req, res, next) => {
+//     if (req.body.listing.image) {
+//         req.body.listing.image = {
+//             filename: req.body.listing.image.split("/").pop(),
+//             url: req.body.listing.image
+//         };
+//     }
+
+//     let result = listingSchema.validate(req.body.listing);
+//     if(result.error){
+//         throw new ExpressError(400, result.error);
+//     }
+
+//     const newListing = new Listing(req.body.listing);
+//     await newListing.save();
+//     res.redirect("/listings");
+// }));
 router.post("/", wrapAsync(async (req, res, next) => {
-    if (req.body.listing.image) {
+    let imageUrl = req.body.listing.image;
+
+    if (typeof imageUrl === "string" && imageUrl.trim() !== "") {
         req.body.listing.image = {
-            filename: req.body.listing.image.split("/").pop(),
-            url: req.body.listing.image
+            filename: imageUrl.split("/").pop(),
+            url: imageUrl
+        };
+    } else {
+        req.body.listing.image = {
+            filename: "default.jpg",
+            url: "/images/default.jpg"  // fallback
         };
     }
 
     let result = listingSchema.validate(req.body.listing);
-    if(result.error){
+    if (result.error) {
         throw new ExpressError(400, result.error);
     }
 
@@ -57,17 +81,51 @@ router.post("/", wrapAsync(async (req, res, next) => {
     res.redirect("/listings");
 }));
 
+
 router.get("/:id/edit", wrapAsync(async (req, res, next) =>{
     let { id } = req.params;
     let listing = await Listing.findById(id);
     res.render("listings/edit", { listing });
 }));
 
-router.put("/:id", wrapAsync(async(req,res, next) =>{
-    let { id } = req.params;
-    await Listing.findByIdAndUpdate(id, {...req.body.listing});
-    res.redirect(`/listings/${id}`);
+// router.put("/:id", wrapAsync(async(req,res, next) =>{
+//     let { id } = req.params;
+//     await Listing.findByIdAndUpdate(id, {...req.body.listing});
+//     res.redirect(`/listings/${id}`);
+// }));
+// router.put("/:id", wrapAsync(async (req, res, next) => {
+//     let { id } = req.params;
+
+//     let updatedData = req.body.listing;
+
+//     // if image not provided in form, don't overwrite
+//     if (!updatedData.image || updatedData.image.trim() === "") {
+//         delete updatedData.image;
+//     }
+
+//     await Listing.findByIdAndUpdate(id, updatedData);
+//     res.redirect(`/listings/${id}`);
+// }));
+router.put("/:id", wrapAsync(async (req, res) => {
+    const { id } = req.params;
+    let updatedData = req.body.listing;
+
+    // ✅ Handle image properly
+    if (typeof updatedData.image === "string" && updatedData.image.trim() !== "") {
+        updatedData.image = {
+            filename: updatedData.image.split("/").pop(),
+            url: updatedData.image
+        };
+    } else if (!updatedData.image || updatedData.image === "") {
+        // Agar image field empty hai to hata do
+        delete updatedData.image;
+    }
+
+    const listing = await Listing.findByIdAndUpdate(id, updatedData, { new: true, runValidators: true });
+
+    res.redirect(`/listings/${listing._id}`);
 }));
+
 
 router.delete("/:id", wrapAsync(async(req, res, next) =>{
    let { id } = req.params;
