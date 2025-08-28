@@ -32,7 +32,12 @@ router.get("/:id", async (req, res) => {
     try {
         const { id } = req.params;
         const listing = await Listing.findById(id).populate("reviews");
+        if(!listing){
+            req.flash("error" , "Listing you requested for doen not exit!");
+            res.redirect("/listings");
+        }
         res.render("listings/show", { listing });
+
     } catch (err) {
         console.error(err);
         res.status(500).send("Something went wrong");
@@ -78,6 +83,7 @@ router.post("/", wrapAsync(async (req, res, next) => {
 
     const newListing = new Listing(req.body.listing);
     await newListing.save();
+    req.flash("success", "New lisiting added!")
     res.redirect("/listings");
 }));
 
@@ -85,6 +91,10 @@ router.post("/", wrapAsync(async (req, res, next) => {
 router.get("/:id/edit", wrapAsync(async (req, res, next) =>{
     let { id } = req.params;
     let listing = await Listing.findById(id);
+    if(!listing){
+            req.flash("error" , "Listing you requested for doen not exit!");
+            res.redirect("/listings");
+        }
     res.render("listings/edit", { listing });
 }));
 
@@ -131,6 +141,7 @@ router.delete("/:id", wrapAsync(async(req, res, next) =>{
    let { id } = req.params;
    let deletedListing =  await Listing.findByIdAndDelete(id);
    console.log(deletedListing);
+   req.flash("success" , "Listing Deleted!")
    res.redirect("/listings");
 }));
  

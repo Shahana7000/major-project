@@ -2,6 +2,12 @@ const express = require('express');
 const session = require('express-session');
 const app = express()
 const Session = require("express-session")
+const flash = require("connect-flash");
+const path = require('path')
+
+
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
 // const cookieParser = require('cookie-parser')
 // const users = require('./routes/users.js')
 // app.use(cookieParser("secretcode"));
@@ -41,18 +47,39 @@ const sessionOptions = {
 
 
 app.use(Session(sessionOptions) )
+app.use(flash());
+
+app.use((req, res, next) =>{
+    res.locals.messages = req.flash("success");
+    res.locals.errmessages = req.flash("error");
+    next();
+})
 
 app.get("/register" , (req, res) =>{
     let {name = "shahana"} =  req.query;
     req.session.name = name;
     // console.log(req.session.name);
     // res.send(name);
+    if(name === "shahana"){
+        req.flash('error' , 'user not registered')
+
+    }else{
+          req.flash('success', 'user registered successfull');
+    }
     res.redirect("/hello")
 })
 
 
-app.get("/hello", (req, res) => {
-    res.send(`hello, ${req.session.name}`)
+
+
+
+
+
+app.get("/hello", (req, res) => { 
+    res.locals.messages  = req.flash("success");
+    res.locals.errmessages  = req.flash("error");
+
+    res.render("page.ejs", {name: req.session.name});
 });
 
 
