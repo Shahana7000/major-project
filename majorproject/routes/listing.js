@@ -4,6 +4,7 @@ const wrapAsync = require('../utils/wrapAsync.js');
 const Listing = require('../models/listing');
 const ExpressError = require('../utils/ExpressError.js');
 const { listingSchema, reviewSchema } = require('../schema.js');
+const {isLoggedIn} = require('../middleware.js');
 
 
 
@@ -24,18 +25,19 @@ router.get("/", wrapAsync(async (req, res, next) => {
     res.render("listings/index", { allListings });
 }));
 
-router.get("/new", (req, res) => {
+router.get("/new", isLoggedIn, (req, res) => {
     res.render("listings/new");
 });
 
 router.get("/:id", async (req, res) => {
     try {
         const { id } = req.params;
-        const listing = await Listing.findById(id).populate("reviews");
+        const listing = await Listing.findById(id).populate("reviews").populate("owner");
         if(!listing){
             req.flash("error" , "Listing you requested for doen not exit!");
             res.redirect("/listings");
         }
+        console.log(listing)
         res.render("listings/show", { listing });
 
     } catch (err) {
@@ -61,7 +63,7 @@ router.get("/:id", async (req, res) => {
 //     await newListing.save();
 //     res.redirect("/listings");
 // }));
-router.post("/", wrapAsync(async (req, res, next) => {
+router.post("/", validateListing, wrapAsync(async (req, res, next) => {
     let imageUrl = req.body.listing.image;
 
     if (typeof imageUrl === "string" && imageUrl.trim() !== "") {
@@ -82,13 +84,15 @@ router.post("/", wrapAsync(async (req, res, next) => {
     }
 
     const newListing = new Listing(req.body.listing);
+    console.log(req.user);
+    newListing.owner = req.user._id;
     await newListing.save();
     req.flash("success", "New lisiting added!")
     res.redirect("/listings");
 }));
 
 
-router.get("/:id/edit", wrapAsync(async (req, res, next) =>{
+router.get("/:id/edit", isLoggedIn, validateListing, wrapAsync(async (req, res, next) =>{
     let { id } = req.params;
     let listing = await Listing.findById(id);
     if(!listing){
@@ -116,7 +120,7 @@ router.get("/:id/edit", wrapAsync(async (req, res, next) =>{
 //     await Listing.findByIdAndUpdate(id, updatedData);
 //     res.redirect(`/listings/${id}`);
 // }));
-router.put("/:id", wrapAsync(async (req, res) => {
+router.put("/:id", isLoggedIn, wrapAsync(async (req, res) => {
     const { id } = req.params;
     let updatedData = req.body.listing;
 
@@ -137,7 +141,7 @@ router.put("/:id", wrapAsync(async (req, res) => {
 }));
 
 
-router.delete("/:id", wrapAsync(async(req, res, next) =>{
+router.delete("/:id", isLoggedIn, wrapAsync(async(req, res, next) =>{
    let { id } = req.params;
    let deletedListing =  await Listing.findByIdAndDelete(id);
    console.log(deletedListing);
