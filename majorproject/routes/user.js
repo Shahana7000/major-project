@@ -6,53 +6,21 @@ const passport = require('passport')
 const passportLocalMongoose = require("passport-local-mongoose");
 const LocalStrategy = require("passport-local");
 const { saveRedirectUrl } = require('../middleware');
+const UserController = require('../controllers/user')
 
-router.get("/signup", (req, res) =>{
-    res.render("users/signup.ejs")
-})
+router.get("/signup", UserController.signupRender);
 
-router.post("/signup", wrapAsync(async(req, res) => {
-    try {
-        let { username, email, password } = req.body;
-        const newUser = new User({ email, username });
-        const registeredUser = await User.register(newUser, password);
-        console.log(registeredUser);
-
-        req.login(registeredUser, (err) => {   // ✅ auto-login after signup
-            if (err) return next(err);
-            req.flash("success", "Welcome to WanderLust, " + registeredUser.username + "!");
-            res.redirect("/listings");
-        });
-    } catch (err) {
-        req.flash("error", err.message);   // ✅ fixed
-        res.redirect("/signup");
-    }
-}));
+router.post("/signup", wrapAsync(UserController.SignupFunction));
 
 
-router.get("/login", (req, res) =>{
-    res.render("users/login.ejs")
-});
+router.get("/login", UserController.LoginAuth);
 
 router.post("/login", 
       saveRedirectUrl, passport.authenticate('local', { failureRedirect: "/login", failureFlash: true }), 
-    async (req, res) => {
-        req.flash("success", "Welcome back! You are now logged in.");
-        let redirectUrl = res.locals.redirectUrl || "/listings";
-        res.redirect(redirectUrl);
-        // res.redirect(redirectUrl)  
-    }
+    UserController.LoginAuthentication
 );
 
-router.get("/logout" , (req, res, next) =>{
-    req.logout((err) =>{
-        if(err){
-            return next(err);
-        }
-        req.flash("success" , "logged out!");
-        res.redirect("/listings")
-    })
-})
+router.get("/logout" , UserController.Logout);
 
 
 

@@ -19,23 +19,31 @@
     </div>
 
     <br/>
+
+   
+
+    <% if(currUser && listing.owner._id.equals(currUser._id)) { %>
     <div class="btns">
       <a href="/listings/<%= listing._id %>/edit" class="btn btn-dark col-1 offset-2 edit-btn">Edit</a>
       <form method="POST" action="/listings/<%= listing._id %>?_method=DELETE">
         <button class="btn btn-dark offset-4">Delete</button>
       </form>
     </div>
+    <% } %> 
 
     <!-- 👇 Comment section ko bhi same row/col structure me la diya -->
+    
     <div class="col-8 offset-2 mt-4 mb-3">
       <hr>
-      <h4>Leave a comment</h4>
+      <% if(currUser) { %>
+      <h4>Leave a Review</h4>
 
       <form action="/listings/<%= listing.id %>/reviews" method="POST" novalidate class="needs-validation">
         <div class="mb-3 mt-3">
           <label for="rating" class="form-label">Rating</label>
           <input type="range" min="1" max="5" id="rating" name="review[rating]" class="form-range">
         </div>
+
         <div class="mb-3 mt-3">
           <label for="comment" class="form-label">Comments</label>
         <textarea name="review[comment]" id="review" cols="30" rows="5" class="form-control" required></textarea>
@@ -44,13 +52,14 @@
         <br/>
         <button class="btn btn-outline-dark">Submit</button>
       </form>
+      <% } %>
       <hr>
       <p><b>All Reviews</b></p>
       <div class="row">
       <% for(let review of listing.reviews) { %>
         <div class="card col-5 ms-3 mb-3">
           <div class="card-body">
-          <h5 class="card-title">Shahana</h5>
+          <h5 class="card-title">@<%= review.author.username %></h5>
           <p class="card-text"><%= review.comment%></p>
           <p class="card-text"><%= review.rating %>&#9733;</p>
         </div>
